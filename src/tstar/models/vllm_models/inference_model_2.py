@@ -4,6 +4,7 @@ from typing import Optional, List
 import torch
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
+import random
 
 
 class VLLMInferenceModel():
@@ -14,8 +15,10 @@ class VLLMInferenceModel():
         download_dir: str,
         dtype: str,
         tensor_parallel_size: int,
-        quantization: Optional[str],
+        quantization: Optional[str] = "none",
+        seed: Optional[int] = 1,
     ):
+        self.seed = seed
         self.tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=model,
             cache_dir=download_dir,
@@ -30,7 +33,7 @@ class VLLMInferenceModel():
             download_dir=download_dir,
             dtype=dtype,
             tensor_parallel_size=tensor_parallel_size,
-            quantization=quantization,
+            quantization=quantization if quantization != "none" else None,
         )
         
     @property
@@ -43,8 +46,11 @@ class VLLMInferenceModel():
         responses: List[str], 
     ) -> torch.Tensor:
         """Returns log probabilities for a batch of responses."""
+        random.seed(self.seed)
+        torch.manual_seed(self.seed)
         with torch.no_grad():
             # tokenize responses first to get max length (responses = prompts + responses)
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
             tokenized_responses = self.tokenizer(
                 responses,
                 add_special_tokens=False,
@@ -95,25 +101,43 @@ class VLLMInferenceModel():
 
             return log_probs
                      
-                     
     def batch_prompt(self, 
         prompts: List[str], 
         max_new_tokens: Optional[int] = 500,
+        do_sample: Optional[bool] = True,
         top_p: Optional[float] = 0.9,
-        temperature: Optional[float] = 0.0,
+        top_k: Optional[int] = -1,
+        temperature: Optional[float] = 0.1,
         num_return_sequences: Optional[int] = 1,
-        is_instruct = False,
+        best_of: Optional[int] = 1,
+        use_beam_search: Optional[bool] = False,
+        presence_penalty: Optional[float] = 0.0,
+        frequency_penalty: Optional[float] = 0.0
+        
     ) -> List[str]:
         """Batched text generation."""       
+        # sampling params
+        if temperature == 0.0:
+            sampling_params = SamplingParams(
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                max_tokens=max_new_tokens,
+                n=num_return_sequences,
+                best_of=1,
+                use_beam_search=use_beam_search,
+                presence_penalty=presence_penalty,
+                frequency_penalty=frequency_penalty,
+            )
+        else:
+            sampling_params = SamplingParams(
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_new_tokens,
+                n=num_return_sequences,
+            )
         
-        sampling_params = SamplingParams(
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=max_new_tokens,
-            n=num_return_sequences,
-            stop_token_ids=[self.tokenizer.eos_token_id, self.tokenizer.convert_tokens_to_ids("<|eot_id|>")] if is_instruct else None,
-        )
-        
+        # sample
         outputs = self.model.generate(
             prompts=prompts,
             sampling_params=sampling_params,
