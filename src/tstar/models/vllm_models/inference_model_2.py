@@ -40,6 +40,27 @@ class VLLMInferenceModel():
     def model_type(self):
         return "VLLMInferenceModel"
     
+    def prompt_logprobs(
+        self, 
+        prompts: List[str],
+        n_logprobs_per_token=50,
+    ) -> torch.Tensor:
+        """Returns n logprobs of prompt tokens."""          
+        sampling_params = SamplingParams(
+            temperature=0,
+            max_tokens=1,
+            n=1,
+            prompt_logprobs=n_logprobs_per_token,
+            spaces_between_special_tokens=False,
+        )
+            
+        output_responses = self.model.generate(
+            sampling_params=sampling_params,
+            prompts=prompts,
+        )
+
+        return output_responses
+        
     def batch_log_probs(
         self, 
         prompts: List[str],
@@ -49,31 +70,12 @@ class VLLMInferenceModel():
         random.seed(self.seed)
         torch.manual_seed(self.seed)
         with torch.no_grad():
-            # tokenize responses first to get max length (responses = prompts + responses)
-            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-            tokenized_responses = self.tokenizer(
-                responses,
-                add_special_tokens=False,
-                return_tensors="pt",
-                padding=True,
-            )
-                    
-            tokenized_prompts = self.tokenizer(
-                prompts,
-                add_special_tokens=False,
-                return_tensors="pt",
-                padding="max_length",
-                max_length=tokenized_responses.input_ids.shape[1],
-            )
-
-            
-            tokenized_responses_input_ids = tokenized_responses.input_ids.tolist()
-            
+            # tokenize responses first to get max length (responses = prompts + responses)            
             sampling_params = SamplingParams(
                 temperature=0.0,
                 max_tokens=1,
                 n=1,
-                prompt_logprobs=128050,
+                prompt_logprobs=5,
                 spaces_between_special_tokens=False,
             )
             # might need to give up to answer and record logprobs from that last part 
@@ -116,7 +118,8 @@ class VLLMInferenceModel():
         frequency_penalty: Optional[float] = 0.0
         
     ) -> List[str]:
-        """Batched text generation."""       
+        """Batched text generation."""     
+        temperature = 0.0  
         # sampling params
         if temperature == 0.0:
             sampling_params = SamplingParams(

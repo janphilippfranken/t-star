@@ -15,16 +15,16 @@ model_config_vllm_llama:
   quantization: null
   tensor_parallel_size: 1
 
-model_config_vllm_llama_instruct:
-  model: "meta-llama/Meta-Llama-3-8B-Instruct"
-  download_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B-Instruct"
-  dtype: auto
-  quantization: null
-  tensor_parallel_size: 1
+# model_config_vllm_llama_instruct:
+#   model: "meta-llama/Meta-Llama-3-8B-Instruct"
+#   download_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B-Instruct"
+#   dtype: auto
+#   quantization: null
+#   tensor_parallel_size: 1
 
-model_config_vllm_mistral:
-  model: "mistralai/Mistral-7B-v0.1"
-  download_dir: "/scr/jphilipp/tstar/pretrained_models/mistral-7b"
-  dtype: auto
-  quantization: null
-  tensor_parallel_size: 1
+# model_config_vllm_mistral:
+#   model: "mistralai/Mistral-7B-v0.1"
+#   download_dir: "/scr/jphilipp/tstar/pretrained_models/mistral-7b"
+#   dtype: auto
+#   quantization: null
+#   tensor_parallel_size: 1
