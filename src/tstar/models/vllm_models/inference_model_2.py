@@ -73,10 +73,10 @@ class VLLMInferenceModel():
                 temperature=0.0,
                 max_tokens=1,
                 n=1,
-                prompt_logprobs=0,
+                prompt_logprobs=128050,
                 spaces_between_special_tokens=False,
             )
-            
+            # might need to give up to answer and record logprobs from that last part 
             # generate responses
             output_responses = self.model.generate(
                 prompt_token_ids=tokenized_responses_input_ids,
@@ -89,6 +89,7 @@ class VLLMInferenceModel():
                 [v for prob in output_answer.prompt_logprobs[1:] for _, v in prob.items()]
                 for output_answer in output_responses
             ])
+            breakpoint()
             
             # mask responses 
             mask_id = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id != 0 else 0

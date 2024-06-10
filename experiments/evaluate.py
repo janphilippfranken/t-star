@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 import torch
 from datasets import load_dataset
-from tstar.models.vllm_models.inference_model import VLLMInferenceModel
+from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
 N_ITEMS = 20
 CoT = False
@@ -52,7 +52,10 @@ def main(args: DictConfig) -> None:
     model = VLLMInferenceModel(
         **args.model_config_vllm_llama,
     )
-
+    prompt = "12345"
+    response = "123467"
+    a = model.batch_log_probs([prompt], [response])
+    breakpoint()
     # data  
     dataset = load_dataset(
         "gsm8k",

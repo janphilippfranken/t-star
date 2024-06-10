@@ -1,0 +1,7 @@
+get logprobs at position of 'A' token
+
+drop the answer token from the logprobs
+
+take top 50 to get started, train linear classifier on these 
+
+if that does not work, try to get residual stream activations and leave vllm
