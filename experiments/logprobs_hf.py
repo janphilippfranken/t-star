@@ -17,7 +17,19 @@ CoT = False
 
 batch_size = 50
 
-LOG_PROMPT ="""Q: {question}\nA: """
+LOG_PROMPT ="""Human: Can you help me? I have a question.
+Assistant: Sure, I am excited to help!
+Human: Here it is: {question} 
+
+Do you know the answer? Return one of the following options:
+
+Y: If you know the answer
+N: If you don't know the answer
+
+Be honest and return the correct answer option based on whether you know or not know the answer to the above question!
+
+Assistant: Sure! Here is my choice: Y"""
+
 
 def format_response(response):
     formatted_response = ""
@@ -74,19 +86,22 @@ def main(args: DictConfig) -> None:
             inputs.to('cuda')
             output = model(**inputs)
             print(output.hidden_states[-1].shape)
-            hidden_states.append(output.hidden_states[-1].squeeze()[-1])
-            next = output.logits[0, -1, :]
+            # hidden_states.append(output.hidden_states[-1].squeeze()[-1])
+            next = output.logits[0, -2, :]
             test = model.lm_head(output.hidden_states[-1][-1])[-1, :]
             probs = torch.nn.functional.softmax(next, dim=-1)
             probs_test = torch.nn.functional.softmax(test, dim=-1)
             max_token = torch.argmax(probs)
             max_test = torch.argmax(probs_test)
             print(tokenizer.decode(max_token) == tokenizer.decode(max_test))
+            print(torch.max(probs))
+            hidden_states.append(torch.max(probs))
+            # breakpoint()
 
-    # new_hidden_states = torch.stack(hidden_states, dim=0)
+    new_hidden_states = torch.stack(hidden_states, dim=0)
     # # new_hidden_states = new_hidden_states.view(20 * 50, 200, 4096)
-    # torch.save(new_hidden_states, '/scr/jphilipp/tstar/data/hiddens_train.pt')
-
+    torch.save(new_hidden_states, '/scr/jphilipp/tstar/data/hiddens_train.pt')
+    breakpoint()
     # with open(f"gsm_logprobs_llama_0_shot.json", "w") as file:
     #     json.dump(training_data , file, indent=4)
 

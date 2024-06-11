@@ -11,7 +11,7 @@ import torch
 from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
-N_ITEMS = 2
+N_ITEMS = 20000
 CoT = False
 
 PROMPT = """Q: {question}\nA:"""
