@@ -45,7 +45,8 @@ class VLLMInferenceModel():
         prompts: List[str],
         n_logprobs_per_token=50,
     ) -> torch.Tensor:
-        """Returns n logprobs of prompt tokens."""          
+        """Returns n logprobs of prompt tokens."""    
+   
         sampling_params = SamplingParams(
             temperature=0,
             max_tokens=1,
@@ -58,6 +59,7 @@ class VLLMInferenceModel():
             sampling_params=sampling_params,
             prompts=prompts,
         )
+        breakpoint()
 
         return output_responses
         

@@ -6,17 +6,20 @@ import re
 import numpy as np
 import os
 from omegaconf import DictConfig
-from tqdm import tqdm
+import tqdm
 import torch
 from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
-N_ITEMS = 2
+N_ITEMS = 2000
 CoT = False
-N_LOGPROBS_PER_TOKEN = 5
 
-LOG_PROMPT = """Q: {question}\nDo you know the correct answer? <|end_of_text|>"""
-PROMPT = """Q: {question}\nA: """
+batch_size = 50
+
+
+LOG_PROMPT ="""Q: {question}\nA: """
+
 
 
 def format_response(response):
@@ -51,11 +54,10 @@ def evaluate_model_response(model_answer, gt_answer):
 def main(args: DictConfig) -> None:
    
     # model
-    model = VLLMInferenceModel(
-        **args.model_config_vllm_llama,
-    )
-    
-    # data  
+
+    model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B", cache_dir="/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B", output_hidden_states=True)
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B", cache_dir="/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B")
+ 
     dataset = load_dataset(
         "gsm8k",
         "main",
@@ -63,37 +65,21 @@ def main(args: DictConfig) -> None:
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
-    breakpoint()
-    batch_prompts = [PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
     log_batch_prompts = [LOG_PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
-    token_logprobs = model.prompt_logprobs(log_batch_prompts, n_logprobs_per_token=N_LOGPROBS_PER_TOKEN)
-    
-    final_token_logprobs = []
-    
-    for logprobs in token_logprobs:
-        idx = logprobs.prompt_token_ids.index(model.tokenizer.eos_token_id)
-        final_token_logprob = logprobs.prompt_logprobs[idx]
-        del final_token_logprob[model.tokenizer.eos_token_id]
-        final_token_logprobs.append(final_token_logprob)
-   
-    batch_responses = model.batch_prompt(
-        prompts=batch_prompts,
-        temperature=0.0,
-        **args.generation_config,
-        
-    )
+    tokenizer.pad_token = tokenizer.eos_token
     
 
-    formatted_responses = [format_response(response) for response in batch_responses]
-   
-    extracted_responses = [extract_answer(response) for response in formatted_responses]
-    gt_answers = [int(gt_answer.split('####')[1].strip().lower().replace(",", "")) for gt_answer in dataset['answer']]
-    evaluated_responses = [evaluate_model_response(model_answer, gt) for model_answer, gt in zip(extracted_responses, gt_answers)]
+    hidden_states = []
+    for i in tqdm.tqdm(range(0, 1000, batch_size)):
+        with torch.no_grad():
+            inputs = tokenizer(log_batch_prompts[i:i+batch_size], padding='max_length', truncation=True, return_tensors="pt", max_length=200)
+            input = inputs
+            output = model(**input)
+            print(output.hidden_states[-1].shape)
+            hidden_states.append(output.hidden_states[-1])
+        
+
     
-    training_data = [
-        {'logprobs': list(logprobs.values()), 'label': label} 
-        for logprobs, label in zip(final_token_logprobs, evaluated_responses)
-    ]
     breakpoint()
     with open(f"gsm_results_llama_0_shot.json", "w") as file:
         json.dump(np.mean(evaluated_responses), file, indent=4)
