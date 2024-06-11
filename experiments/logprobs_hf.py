@@ -12,7 +12,7 @@ from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
-N_ITEMS = 2000
+N_ITEMS = 10000
 CoT = False
 
 batch_size = 50
@@ -59,7 +59,7 @@ def main(args: DictConfig) -> None:
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="test",
+        split="train",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
@@ -75,11 +75,17 @@ def main(args: DictConfig) -> None:
             output = model(**inputs)
             print(output.hidden_states[-1].shape)
             hidden_states.append(output.hidden_states[-1].squeeze()[-1])
-        
-    breakpoint()
-    new_hidden_states = torch.stack(hidden_states, dim=0)
-    # new_hidden_states = new_hidden_states.view(20 * 50, 200, 4096)
-    torch.save(new_hidden_states, '/scr/jphilipp/tstar/data/hiddens.pt')
+            next = output.logits[0, -1, :]
+            test = model.lm_head(output.hidden_states[-1][-1])[-1, :]
+            probs = torch.nn.functional.softmax(next, dim=-1)
+            probs_test = torch.nn.functional.softmax(test, dim=-1)
+            max_token = torch.argmax(probs)
+            max_test = torch.argmax(probs_test)
+            print(tokenizer.decode(max_token) == tokenizer.decode(max_test))
+
+    # new_hidden_states = torch.stack(hidden_states, dim=0)
+    # # new_hidden_states = new_hidden_states.view(20 * 50, 200, 4096)
+    # torch.save(new_hidden_states, '/scr/jphilipp/tstar/data/hiddens_train.pt')
 
     # with open(f"gsm_logprobs_llama_0_shot.json", "w") as file:
     #     json.dump(training_data , file, indent=4)

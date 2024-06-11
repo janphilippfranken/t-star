@@ -28,9 +28,6 @@ for i, label in enumerate(labels):
 
 x = torch.stack(x).float()
 y = torch.tensor(y).float()
-perm = torch.randperm(len(x))
-x = x[perm]
-y = y[perm]
 
 x_eval = torch.tensor(eval_hidden).float() 
 y_eval = torch.tensor(eval_labels).float()

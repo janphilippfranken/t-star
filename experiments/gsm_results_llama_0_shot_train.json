@@ -1,0 +1,12 @@
+[
+    {
+        "prompt": "Q: Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?\nA:",
+        "label": true,
+        "response": "48 + 24 = 72"
+    },
+    {
+        "prompt": "Q: Weng earns $12 an hour for babysitting. Yesterday, she just did 50 minutes of babysitting. How much did she earn?\nA:",
+        "label": false,
+        "response": "$6.00"
+    }
+]

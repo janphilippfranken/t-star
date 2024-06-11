@@ -11,7 +11,7 @@ import torch
 from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
-N_ITEMS = 20
+N_ITEMS = 2
 CoT = False
 
 PROMPT = """Q: {question}\nA:"""
@@ -52,21 +52,17 @@ def main(args: DictConfig) -> None:
     model = VLLMInferenceModel(
         **args.model_config_vllm_llama,
     )
-    breakpoint()
-    prompt = """Q: {question}\nA:"""
-    response = """Q: {question}\nA:"""
-    a = model.batch_log_probs([prompt], [response])
-    breakpoint()
+ 
     # data  
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="test",
+        split="train",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
     batch_prompts = [PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
-    breakpoint()
+
     batch_responses = model.batch_prompt(
         prompts=batch_prompts,
         temperature=0.0,
@@ -80,9 +76,14 @@ def main(args: DictConfig) -> None:
     gt_answers = [int(gt_answer.split('####')[1].strip().lower().replace(",", "")) for gt_answer in dataset['answer']]
     evaluated_responses = [evaluate_model_response(model_answer, gt) for model_answer, gt in zip(extracted_responses, gt_answers)]
 
+    training_data = [
+        {'prompt': prompt,'label': label, 'response': response} 
+        for prompt, label, response in zip(batch_prompts, evaluated_responses, formatted_responses)
+    ]
+    
     breakpoint()
-    with open(f"gsm_results_llama_0_shot.json", "w") as file:
-        json.dump(np.mean(evaluated_responses), file, indent=4)
+    with open(f"gsm_results_llama_0_shot_train.json", "w") as file:
+        json.dump(training_data, file, indent=4)
 
 
 if __name__ == "__main__":
