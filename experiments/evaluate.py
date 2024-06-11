@@ -14,7 +14,7 @@ from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 N_ITEMS = 20000
 CoT = False
 
-PROMPT = """Q: {question}\nA:"""
+PROMPT = """Q: {question}\nA: L"""
 
 
 def format_response(response):
@@ -57,7 +57,7 @@ def main(args: DictConfig) -> None:
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="train",
+        split="test",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
@@ -82,7 +82,8 @@ def main(args: DictConfig) -> None:
     ]
     
     breakpoint()
-    with open(f"gsm_results_llama_0_shot_train.json", "w") as file:
+    print(np.mean(evaluated_responses))
+    with open(f"gsm_results_llama_0_shot_test_checkpoint_0.26.json", "w") as file:
         json.dump(training_data, file, indent=4)
 
 

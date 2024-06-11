@@ -9,8 +9,8 @@ generation_config:
   num_return_sequences: 1 
 
 model_config_vllm_llama:
-  model: "meta-llama/Meta-Llama-3-8B"
-  download_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B"
+  model: "/scr/jphilipp/tstar/checkpoints/epoch-0.26"
+  download_dir: "/scr/jphilipp/tstar/checkpoints/epoch-0.26"
   dtype: auto
   quantization: null
   tensor_parallel_size: 1

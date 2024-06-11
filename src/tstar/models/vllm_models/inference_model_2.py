@@ -62,49 +62,6 @@ class VLLMInferenceModel():
         breakpoint()
 
         return output_responses
-        
-    def batch_log_probs(
-        self, 
-        prompts: List[str],
-        responses: List[str], 
-    ) -> torch.Tensor:
-        """Returns log probabilities for a batch of responses."""
-        random.seed(self.seed)
-        torch.manual_seed(self.seed)
-        with torch.no_grad():
-            # tokenize responses first to get max length (responses = prompts + responses)            
-            sampling_params = SamplingParams(
-                temperature=0.0,
-                max_tokens=1,
-                n=1,
-                prompt_logprobs=5,
-                spaces_between_special_tokens=False,
-            )
-            # might need to give up to answer and record logprobs from that last part 
-            # generate responses
-            output_responses = self.model.generate(
-                prompt_token_ids=tokenized_responses_input_ids,
-                sampling_params=sampling_params,
-                use_tqdm=False,
-            )
-  
-            # now get the tokens back
-            log_probs_responses = torch.tensor([
-                [v for prob in output_answer.prompt_logprobs[1:] for _, v in prob.items()]
-                for output_answer in output_responses
-            ])
-            breakpoint()
-            
-            # mask responses 
-            mask_id = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id != 0 else 0
-            labels = tokenized_responses.input_ids[:, 1:]
-            mask = torch.logical_and(tokenized_prompts.input_ids[:, 1:] == mask_id, labels != 0)
-            log_probs_responses.masked_fill_(~mask, 0) 
-            log_probs = log_probs_responses.sum(dim=-1)
-
-            torch.cuda.empty_cache()
-
-            return log_probs
                      
     def batch_prompt(self, 
         prompts: List[str], 

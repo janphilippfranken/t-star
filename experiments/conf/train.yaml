@@ -1,0 +1,37 @@
+hydra:
+  run:
+    dir: hydra-configs
+
+# data
+data_path: ./
+data_file: data.json
+n_examples: 2000
+n_responses: 2
+n_constitutions: 2
+
+defaults:
+  - model: llama_8b_base
+
+wandb:
+  project: gsm
+  name: gsm
+  log: true
+
+typo:
+  beta: 0.0
+
+training:
+  evaluate_before_training: false
+  evaluate: false
+  n_epochs: 1
+  lr: 5e-6
+  train_batch_size: 1
+  eval_batch_size: 1
+  train_split: 1.0
+  checkpoint_dir: "/scr/jphilipp/tstar/checkpoints"
+  max_grad_norm: 1.0
+  num_warmup_steps: 1
+  gradient_accumulation_steps: 16
+  save_after_n_steps: 512
+  seed: 42
+  model_archive: null 

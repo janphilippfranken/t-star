@@ -1,0 +1,13 @@
+start_example: 0
+max_example: 250
+batch_size: 250
+generation_config:
+  max_new_tokens: 512
+  top_p: 0.9
+  num_return_sequences: 1
+model_config_vllm_llama:
+  model: meta-llama/Meta-Llama-3-8B
+  download_dir: /scr/jphilipp/tstar/checkpoints/epoch-0.52/
+  dtype: auto
+  quantization: null
+  tensor_parallel_size: 1

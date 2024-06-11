@@ -6,6 +6,6 @@ model_config:
   cache_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B"
 
 tokenizer_config:
-  pretrained_model_name_or_path: "meta-llama/Meta-Llama-3-8B-Instruct"
-  cache_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B-Instruct"
-  model_max_length: 8000
+  pretrained_model_name_or_path: "meta-llama/Meta-Llama-3-8B"
+  cache_dir: "/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B"
+  model_max_length: 8192

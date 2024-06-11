@@ -9,14 +9,23 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 import torch
 from datasets import load_dataset
-from tstar.models.vllm_models.inference_model import VLLMInferenceModel
+from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
-N_ITEMS = 2000
+N_ITEMS = 20000
+CoT = False
 
-PROMPT_COT = """Q: {question}\nA: Let's think step-by-step"""
+PROMPT = """Q: {question}\nA: Let's think step-by-step"""
+
+
+def format_response(response):
+    formatted_response = ""
+    try:
+        formatted_response = response.split("Q:")[0].strip().lower()
+    except:
+        print("invalid, continue")
+    return formatted_response
 
 def extract_answer(answer):
-    answer = answer.lower().strip()
     if '=' in answer:
         answer = answer.split('=')[-1].strip()
     answer = answer.replace(",", "")
@@ -41,18 +50,18 @@ def main(args: DictConfig) -> None:
    
     # model
     model = VLLMInferenceModel(
-        **args.model_config_vllm_mistral,
+        **args.model_config_vllm_llama,
     )
-
+ 
     # data  
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="test",
+        split="train",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
-    batch_prompts = [PROMPT_COT.format(question=question) for question in dataset['question'][:N_ITEMS]]
+    batch_prompts = [PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
 
     batch_responses = model.batch_prompt(
         prompts=batch_prompts,
@@ -61,14 +70,20 @@ def main(args: DictConfig) -> None:
         
     )
 
-    breakpoint()
-    extracted_responses = [extract_answer(response) for response in batch_responses]
+    formatted_responses = [format_response(response) for response in batch_responses]
+   
+    extracted_responses = [extract_answer(response) for response in formatted_responses]
     gt_answers = [int(gt_answer.split('####')[1].strip().lower().replace(",", "")) for gt_answer in dataset['answer']]
     evaluated_responses = [evaluate_model_response(model_answer, gt) for model_answer, gt in zip(extracted_responses, gt_answers)]
 
+    training_data = [
+        {'prompt': prompt,'label': label, 'response': response} 
+        for prompt, label, response in zip(batch_prompts, evaluated_responses, formatted_responses)
+    ]
+    
     breakpoint()
-    with open(f"gsm_results_mistral_base_0_shot_cot.json", "w") as file:
-        json.dump(np.mean(evaluated_responses), file, indent=4)
+    with open(f"gsm_results_llama_0_shot_cot_train.json", "w") as file:
+        json.dump(training_data, file, indent=4)
 
 
 if __name__ == "__main__":
