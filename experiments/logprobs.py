@@ -11,11 +11,11 @@ import torch
 from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
-N_ITEMS = 2000
+N_ITEMS = 2
 CoT = False
-N_LOGPROBS_PER_TOKEN = 50
+N_LOGPROBS_PER_TOKEN = 5
 
-LOG_PROMPT = """Q: {question}\nA: <|end_of_text|>"""
+LOG_PROMPT = """Q: {question}\nDo you know the correct answer? <|end_of_text|>"""
 PROMPT = """Q: {question}\nA: """
 
 
@@ -63,6 +63,7 @@ def main(args: DictConfig) -> None:
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
+    breakpoint()
     batch_prompts = [PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
     log_batch_prompts = [LOG_PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
     token_logprobs = model.prompt_logprobs(log_batch_prompts, n_logprobs_per_token=N_LOGPROBS_PER_TOKEN)

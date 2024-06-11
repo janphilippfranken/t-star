@@ -174,3 +174,8 @@ cython_debug/
 
 # satisfy github size req 
 find . -size +100M | cat >> .gitignore
+
+
+.new_tensor.pt
+*/.new_tensor.pt
+**/.new_tensor.pt
