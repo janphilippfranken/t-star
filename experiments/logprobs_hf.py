@@ -15,12 +15,9 @@ from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 N_ITEMS = 2000
 CoT = False
 
-batch_size = 20
-
+batch_size = 50
 
 LOG_PROMPT ="""Q: {question}\nA: """
-
-
 
 def format_response(response):
     formatted_response = ""
@@ -55,9 +52,10 @@ def main(args: DictConfig) -> None:
    
     # model
 
-    model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B", cache_dir="/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B", output_hidden_states=True)
+    model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B", cache_dir="/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B", output_hidden_states=True, torch_dtype=torch.float16, attn_implementation="flash_attention_2")
+    model.to('cuda')
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B", cache_dir="/scr/jphilipp/sami-online/pretrained_models/Meta-Llama-3-8B")
- 
+
     dataset = load_dataset(
         "gsm8k",
         "main",
@@ -70,23 +68,21 @@ def main(args: DictConfig) -> None:
     
 
     hidden_states = []
-    for i in tqdm.tqdm(range(0, 100, batch_size)):
+    for i in tqdm.tqdm(range(0, len(log_batch_prompts))):
         with torch.no_grad():
-            inputs = tokenizer(log_batch_prompts[i:i+batch_size], padding='max_length', truncation=True, return_tensors="pt", max_length=200)
-            input = inputs
-            output = model(**input)
+            inputs = tokenizer(log_batch_prompts[i], padding=False, truncation=True, return_tensors="pt")
+            inputs.to('cuda')
+            output = model(**inputs)
             print(output.hidden_states[-1].shape)
-            hidden_states.append(output.hidden_states[-1])
+            hidden_states.append(output.hidden_states[-1].squeeze()[-1])
         
-
+    breakpoint()
     new_hidden_states = torch.stack(hidden_states, dim=0)
-    new_hidden_states = new_hidden_states.view(5 * 20, 200, 4096)
-    torch.save(new_hidden_states, 'new_tensor.pt')
+    # new_hidden_states = new_hidden_states.view(20 * 50, 200, 4096)
+    torch.save(new_hidden_states, '/scr/jphilipp/tstar/data/hiddens.pt')
 
     # with open(f"gsm_logprobs_llama_0_shot.json", "w") as file:
     #     json.dump(training_data , file, indent=4)
 
 if __name__ == "__main__":
     fire.Fire(main())
-    
-    /scr/jphilipp/tstar/data
