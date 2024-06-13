@@ -50,14 +50,14 @@ def main(args: DictConfig) -> None:
    
     # model
     model = VLLMInferenceModel(
-        **args.model_config_vllm_llama,
+        **args.model_config_vllm_qwen,
     )
  
     # data  
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="train",
+        split="test",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
 
@@ -82,7 +82,7 @@ def main(args: DictConfig) -> None:
     ]
     
     breakpoint()
-    with open(f"gsm_results_llama_0_shot_cot_train.json", "w") as file:
+    with open(f"gsm_results_qwen_0_shot_cot.json", "w") as file:
         json.dump(training_data, file, indent=4)
 
 

@@ -17,18 +17,13 @@ CoT = False
 
 batch_size = 50
 
-LOG_PROMPT ="""Human: Can you help me? I have a question.
-Assistant: Sure, I am excited to help!
-Human: Here it is: {question} 
+LOG_PROMPT ="""Human: Here is a question: 
 
-Do you know the answer? Return one of the following options:
+{question}
 
-Y: If you know the answer
-N: If you don't know the answer
+Do you know the answer?
 
-Be honest and return the correct answer option based on whether you know or not know the answer to the above question!
-
-Assistant: Sure! Here is my choice: Y"""
+Assistant: """
 
 
 def format_response(response):
@@ -96,7 +91,7 @@ def main(args: DictConfig) -> None:
             print(tokenizer.decode(max_token) == tokenizer.decode(max_test))
             print(torch.max(probs))
             hidden_states.append(torch.max(probs))
-            # breakpoint()
+            breakpoint()
 
     new_hidden_states = torch.stack(hidden_states, dim=0)
     # # new_hidden_states = new_hidden_states.view(20 * 50, 200, 4096)
