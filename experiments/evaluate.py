@@ -11,8 +11,8 @@ import torch
 from datasets import load_dataset
 from tstar.models.vllm_models.inference_model_2 import VLLMInferenceModel
 
-N_ITEMS = 20000
-CoT = False
+N_ITEMS = 2000
+
 
 PROMPT = """Q: {question}\nA:"""
 
@@ -57,12 +57,12 @@ def main(args: DictConfig) -> None:
     dataset = load_dataset(
         "gsm8k",
         "main",
-        split="test",
+        split="train",
         cache_dir="/scr/jphilipp/tstar/datasets/gsm",
     )
-
+    
     batch_prompts = [PROMPT.format(question=question) for question in dataset['question'][:N_ITEMS]]
-
+    breakpoint()
     batch_responses = model.batch_prompt(
         prompts=batch_prompts,
         temperature=0.0,
@@ -83,7 +83,7 @@ def main(args: DictConfig) -> None:
     
     breakpoint()
     print(np.mean(evaluated_responses))
-    with open(f"gsm_results_qwen_0_shot.json", "w") as file:
+    with open(f"gsm_0_shot_llama_8b.json", "w") as file:
         json.dump(training_data, file, indent=4)
 
 

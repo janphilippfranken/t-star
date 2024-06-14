@@ -1,0 +1,22 @@
+generation_config:
+  max_new_tokens: 512
+  top_p: 0.9
+  num_return_sequences: 1
+model_config_vllm_llama:
+  model: /scr/jphilipp/tstar/checkpoints/epoch-0.26
+  download_dir: /scr/jphilipp/tstar/checkpoints/epoch-0.26
+  dtype: auto
+  quantization: null
+  tensor_parallel_size: 1
+model_config_vllm_qwen:
+  model: Qwen/Qwen2-7B
+  download_dir: /scr/jphilipp/tstar/pretrained_models/Qwen2-7B
+  dtype: auto
+  quantization: null
+  tensor_parallel_size: 1
+model_config_vllm_mistral:
+  model: mistralai/Mistral-7B-v0.1
+  download_dir: /scr/jphilipp/tstar/pretrained_models/mistral-7b
+  dtype: auto
+  quantization: null
+  tensor_parallel_size: 1
